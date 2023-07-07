@@ -3,9 +3,24 @@ extends CharacterBody2D
 @export var speed = 100
 var current_dir = "none"
 
+var enemy_in_attack_range = false
+var enemy_attack_cooldown = true
+var health = 100
+var player_alive = true
+
+var attack_ip = false
+
 
 func _physics_process(delta):
 	player_movement(delta)
+	enemy_attack()
+	attack()
+
+	if health <= 0:
+		player_alive = false  # Add end screen
+		health = 0
+		print("Player died")
+		self.queue_free()  # free the memory
 
 
 func player_movement(_delta):
@@ -46,22 +61,72 @@ func play_anim(movement):
 		if movement:
 			anim.play("side_walk")
 		else:
-			anim.play("side_idle")
+			if not attack_ip:
+				anim.play("side_idle")
+			else:
+				anim.play("side_attack")
 	elif dir == "right":
 		anim.flip_h = false
 		if movement:
 			anim.play("side_walk")
 		else:
-			anim.play("side_idle")
+			if not attack_ip:
+				anim.play("side_idle")
+			else:
+				anim.play("side_attack")
 	elif dir == "up":
 		if movement:
 			anim.play("back_walk")
 		else:
-			anim.play("back_idle")
+			if not attack_ip:
+				anim.play("back_idle")
+			else:
+				anim.play("back_attack")
 	elif dir == "down":
 		if movement:
 			anim.play("front_walk")
 		else:
-			anim.play("front_idle")
+			if not attack_ip:
+				anim.play("front_idle")
+			else:
+				anim.play("front_attack")
 	else:
 		anim.play("front_idle")
+
+
+func _on_player_hitbox_body_entered(body):
+	# Check whether enemy has entered
+	if body.name == "enemy":
+		enemy_in_attack_range = true
+
+
+func _on_player_hitbox_body_exited(body):
+	# Check whether enemy has exited
+	if body.name == "enemy":
+		enemy_in_attack_range = false
+
+
+func enemy_attack():
+	if enemy_in_attack_range and enemy_attack_cooldown:
+		health -= 10
+		enemy_attack_cooldown = false
+		$attack_cooldown.start()
+		print("Player health: " + str(health))
+
+
+func attack():
+	if Input.is_action_pressed("attack"):
+		attack_ip = true
+		Global.player_current_attack = true
+		$deal_attack_timer.start()
+
+
+func _on_attack_cooldown_timeout():
+	enemy_attack_cooldown = true
+
+
+func _on_deal_attack_timer_timeout():
+	$deal_attack_timer.stop()
+	attack_ip = false
+	Global.player_current_attack = false
+	print(attack_ip)

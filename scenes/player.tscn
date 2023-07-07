@@ -1,4 +1,4 @@
-[gd_scene load_steps=56 format=3 uid="uid://ks0y2k37wx4t"]
+[gd_scene load_steps=57 format=3 uid="uid://ks0y2k37wx4t"]
 
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_u0v2o"]
 [ext_resource type="Texture2D" uid="uid://bp4id3b5hpu0k" path="res://art/characters/player.png" id="2_xgt47"]
@@ -416,14 +416,46 @@ animations = [{
 [sub_resource type="CircleShape2D" id="CircleShape2D_u8bya"]
 radius = 4.0
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_tkayp"]
+radius = 13.0
+
 [node name="Player" type="CharacterBody2D"]
+collision_layer = 3
 script = ExtResource("1_u0v2o")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(-1, -12)
+y_sort_enabled = true
 sprite_frames = SubResource("SpriteFrames_qe5kt")
 animation = &"side_walk"
 frame_progress = 0.796453
+offset = Vector2(0, -15)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+visible = false
+position = Vector2(1, -2)
 shape = SubResource("CircleShape2D_u8bya")
+
+[node name="player_hitbox" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="player_hitbox"]
+position = Vector2(0, -9)
+shape = SubResource("CircleShape2D_tkayp")
+
+[node name="attack_cooldown" type="Timer" parent="."]
+wait_time = 0.5
+
+[node name="deal_attack_timer" type="Timer" parent="."]
+wait_time = 0.5
+
+[node name="Camera2D" type="Camera2D" parent="."]
+limit_left = 0
+limit_top = 0
+limit_right = 685
+limit_bottom = 240
+drag_horizontal_enabled = true
+drag_vertical_enabled = true
+
+[connection signal="body_entered" from="player_hitbox" to="." method="_on_player_hitbox_body_entered"]
+[connection signal="body_exited" from="player_hitbox" to="." method="_on_player_hitbox_body_exited"]
+[connection signal="timeout" from="attack_cooldown" to="." method="_on_attack_cooldown_timeout"]
+[connection signal="timeout" from="deal_attack_timer" to="." method="_on_deal_attack_timer_timeout"]
